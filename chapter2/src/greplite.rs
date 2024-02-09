@@ -1,4 +1,6 @@
-static  QUOTE: &str = "\
+use regex::Regex;
+
+static QUOTE: &str = "\
 now is the time
 for all good men
 to come to the aid
@@ -8,7 +10,7 @@ fn grep<'a>(term: &str, txt: &'a str) -> Option<(&'a str, u32)> {
     let mut result: Option<(&str, u32)> = None;
     let mut line_nbr = 0;
     for s in txt.lines() {
-        if s.contains(term){
+        if s.contains(term) {
             result = Some((s, line_nbr));
         }
         line_nbr += 1;
@@ -19,7 +21,19 @@ fn grep<'a>(term: &str, txt: &'a str) -> Option<(&'a str, u32)> {
 fn grep2<'a>(term: &str, txt: &'a str) -> Option<(&'a str, usize)> {
     let mut result: Option<(&str, usize)> = None;
     for (i, s) in txt.lines().enumerate() {
-        if s.contains(term){
+        if s.contains(term) {
+            result = Some((s, i));
+        }
+    }
+    result
+}
+fn grep3<'a>(term: &str, txt: &'a str) -> Option<(&'a str, usize)> {
+    let re = Regex::new(term).unwrap();
+
+    let mut result: Option<(&str, usize)> = None;
+    for (i, s) in txt.lines().enumerate() {
+        let contains_substring = re.find(s);
+        if contains_substring.is_some() {
             result = Some((s, i));
         }
     }
@@ -28,23 +42,23 @@ fn grep2<'a>(term: &str, txt: &'a str) -> Option<(&'a str, usize)> {
 
 #[cfg(test)]
 mod tests {
-use super::*;
+    use super::*;
 
     #[test]
-    fn grep_read_lines(){
+    fn grep_read_lines() {
         let mut count = 0;
-        for _ in QUOTE.lines(){
+        for _ in QUOTE.lines() {
             count += 1;
         }
         assert_eq!(count, 4);
     }
     #[test]
-    fn grep_find_lines(){
+    fn grep_find_lines() {
         let term = "party";
         let mut found: Option<&str> = None;
 
-        for line in QUOTE.lines(){
-            if line.contains(term){
+        for line in QUOTE.lines() {
+            if line.contains(term) {
                 found = Some(line);
             }
         }
@@ -66,5 +80,12 @@ use super::*;
         assert!(result.is_some());
         assert_eq!(result.unwrap().0, "to come to the aid");
         assert_eq!(result.unwrap().1, 2);
+    }
+
+    #[test]
+    fn grep_test_grep_regex() {
+        let result = grep3("party", QUOTE);
+        assert!(result.is_some());
+        assert_eq!(result.unwrap().1, 3);
     }
 }
