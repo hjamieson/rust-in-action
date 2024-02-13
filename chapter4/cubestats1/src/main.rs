@@ -1,5 +1,7 @@
 #![allow(unused)]
 
+use std::{cell::RefCell, rc::Rc};
+
 #[derive(Debug)]
 enum StatusMessage {
     Ok,
@@ -18,17 +20,17 @@ impl CubeSat {
 
 #[derive(Debug)]
 struct Mailbox {
-    messages: Vec<Message>
+    messages: Vec<Message>,
 }
 
 #[derive(Debug)]
-struct Message{
+struct Message {
     to: u64,
     content: String,
-} 
+}
 
 impl Mailbox {
-    fn post(&mut self, msg:Message) {
+    fn post(&mut self, msg: Message) {
         self.messages.push(msg);
     }
 
@@ -47,45 +49,40 @@ fn check_status(cube_sat: &CubeSat) -> StatusMessage {
     StatusMessage::Ok
 }
 
-struct GroundStation;
+#[derive(Debug)]
+struct GroundStation {
+    radio_freq: f64,
+}
 
 impl GroundStation {
-    fn send(&self, mailbox: &mut Mailbox, msg: Message){
+    fn send(&self, mailbox: &mut Mailbox, msg: Message) {
         mailbox.post(msg);
     }
 
     fn connect(&self, sat_id: u64) -> CubeSat {
-        CubeSat{
-            id: sat_id,
-        }
+        CubeSat { id: sat_id }
     }
 }
 
 // returns the valid codesat identifiers.
-fn fetch_sat_ids() -> Vec<u64>{
-    vec![1,2,3]
+fn fetch_sat_ids() -> Vec<u64> {
+    vec![1, 2, 3]
 }
 
 fn main() {
-    let mut mailbox = Mailbox{messages: vec![]};
+    let base = Rc::new(RefCell::new(GroundStation { radio_freq: 87.65 }));
+    println!("{:?}", base);
 
-    let base = GroundStation{};
-
-    let sat_ids = fetch_sat_ids();
-
-    for sat_id in sat_ids {
-        let mut sat = base.connect(sat_id);
-
-        let msg = Message {to: sat_id, content: String::from("hello")};
-
-        base.send(&mut mailbox, msg);
+    {
+        let mut base_2 = base.borrow_mut();
+        base_2.radio_freq -= 12.34;
+        println!("{:?}", base_2);
     }
 
-    let sat_ids = fetch_sat_ids();
-    for sat_id in sat_ids {
-        let sat = base.connect(sat_id);
-        let msg = sat.recv(&mut mailbox);
-        println!("{:?}: {:?}", sat, msg);
-    }
+    println!("{:?}", base);
 
+    let mut base_3 = base.borrow_mut();
+    base_3.radio_freq -= 42.21;
+    println!("{:?}", base);
+    println!("{:?}", base_3);
 }
