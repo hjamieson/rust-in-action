@@ -1,0 +1,11 @@
+{
+  "sysroot": "/Users/hughj/.rustup/toolchains/stable-x86_64-apple-darwin",
+  "crates": [
+    {
+      "root_module": "ch5-to-oblivion.rs",
+      "display_name": "chapter5",
+      "edition": "2021",
+      "deps":[]
+    }
+  ]
+}
